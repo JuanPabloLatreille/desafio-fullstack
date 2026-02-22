@@ -1,85 +1,188 @@
-# Desafio C# - Aliare
+# ☁️ Consultar Tempo
 
-Quer fazer parte da transformação do campo ~~escrevendo~~ codando o futuro do agronegócio?
+**Autor:** Juan Pablo Latreille
 
-Se deseja participar do nosso processo seletivo, siga as instruções deste desafio e execute os seguintes passos: 
+Aplicação full-stack para consulta e registro de temperaturas de cidades brasileiras, consumindo a API do OpenWeatherMap. Desenvolvida com .NET 8 no backend, Vue 3 + TypeScript no frontend e PostgreSQL como banco de dados relacional.
 
-* Nos mande sua resolução em um *pull request* neste repositório.
+---
 
-* Deixe a aplicação disponível publicamente em imagem docker em qualquer host. Na descrição do PR passe o link para que consigamos usar sua imagem.
+## Tecnologias
 
-* Por último, caso você ainda não esteja no processo seletivo, envie um email para [murilo.silva@aliare.co](mailto:murilo.silva@aliare.co) com seu CV anexado e o link da aplicação (se já estiver no processo seletivo, não precisa);
+### Backend
+- .NET 8 (C#)
+- Clean Architecture com CQRS (MediatR)
+- Entity Framework Core 8 com PostgreSQL
+- FluentValidation
+- Autenticação JWT
+- RestSharp para integração com OpenWeatherMap
+- Swagger/OpenAPI para documentação
+- Testes unitários (NUnit, Moq, Bogus, FluentAssertions)
+- Testes de integração (WebApplicationFactory)
 
-  
+### Frontend
+- Vue 3 + TypeScript
+- Vue Router com guards de autenticação
+- Axios para comunicação com a API
+- Chart.js + vue-chartjs para gráficos
+- CSS puro (sem frameworks de UI)
 
-# Sobre a Aliare
+### Infraestrutura
+- Docker e Docker Compose
+- PostgreSQL 17
+- Nginx (servidor do frontend com proxy reverso)
 
-A [Aliare](https://www.aliare.co/) é a maior empresa TECH AGRO do Brasil. Somos a plataforma de cooperação do agronegócio, conectando pessoas, ferramentas e empresas para transformar tempo em produtividade. Existimos para que todos os agentes da cadeia produtiva tenham informações certas, no tempo certo.
+### Imagens Docker Hub
+- **API:** `docker pull juanpablolatreille/consultweather-api:latest`
+- **Frontend:** `docker pull juanpablolatreille/consultweather-frontend:latest`
 
-Nascemos do legado de três grandes empresas: Siagri, Datacoper e BTG, movidas pelo desejo de transformar o agronegócio do futuro.
+---
 
-**Tudo que o agro precisa logo ali.**
+## Funcionalidades
 
+- **Registrar temperatura por cidade** — Endpoint que recebe o nome da cidade, consulta o provedor de clima (OpenWeatherMap), persiste no banco e retorna a temperatura atual.
+- **Registrar temperatura por coordenadas** — Endpoint que recebe latitude e longitude, consulta o provedor de clima, persiste no banco e retorna a temperatura atual.
+- **Consultar histórico de temperaturas** — Endpoint que recebe o nome da cidade ou coordenadas e retorna o histórico dos últimos 30 dias, ordenado do mais recente para o mais antigo.
+- **Interface Web** — Frontend em Vue 3 + TypeScript que permite registrar temperaturas, consultar e visualizar o histórico em lista e em gráfico.
+- **Autenticação JWT** — Cadastro de usuário e login com proteção dos endpoints de escrita.
+- **Health Check** — Endpoint `/health` que verifica a saúde da aplicação e conexão com o banco.
 
-# O desafio
+---
 
-O objetivo deste desafio é avaliar sua capacidade de projetar e desenvolver uma aplicação full-stack utilizando .NET 8 (C#) no backend e Vue 3 (TypeScript) no frontend, consumindo uma API REST e persistindo dados em banco relacional.
+## Arquitetura
 
-A aplicação deve permitir que o usuário consulte e registre informações de clima de diferentes localidades, com visualização de histórico.
+```
+ConsultWeather/
+├── src/
+│   ├── API/                  # Camada de apresentação (Controllers, Middlewares)
+│   ├── Application/          # Camada de aplicação (Commands, Queries, Validators)
+│   ├── Domain/               # Camada de domínio (Entidades, Interfaces, Exceptions)
+│   └── Infraestructure/      # Camada de infraestrutura (Repositórios, EF Core, Services)
+├── tests/
+│   ├── UnitTests/            # Testes unitários
+│   └── IntegrationTests/     # Testes de integração
+├── frontend/                 # Vue 3 + TypeScript
+├── docker-compose.yml
+└── README.md
+```
 
+---
 
-## Requisitos
-- Registrar temperatura por cidade
+## Como Executar
 
-  - Deve existir um endpoint que receba o nome da cidade.
-  - A aplicação deve consultar um provedor de clima (ou simulado/fake provider), persistir o resultado no banco de dados e retornar a temperatura atual.
+### Pré-requisitos
 
-- Registrar temperatura por coordenadas
+- [Docker](https://www.docker.com/products/docker-desktop/) instalado e rodando
 
-  - Deve existir um endpoint que receba a latitude e longitude.
-  - A aplicação deve consultar o provedor de clima, persistir o resultado no banco de dados e retornar a temperatura atual.
+### Subir a aplicação completa
 
-- Consultar histórico de temperaturas
+Na raiz do projeto, execute:
 
-  - Deve existir um endpoint que receba o nome da cidade ou as coordenadas (lat/long).
-  - O sistema deve retornar o histórico de temperaturas registradas para a localidade nos últimos 30 dias, ordenadas do mais recente para o mais antigo.
+```bash
+docker compose up -d --build
+```
 
-- Interface Web
+Esse comando sobe os 3 serviços:
 
-  - A aplicação deve possuir um frontend em Vue 3 + TypeScript que permita:
-    - Informar o nome da cidade para registrar a leitura de temperatura.
-    - Consultar e visualizar o histórico de temperaturas em lista e em gráfico.
-## Requisitos não funcionais
+| Serviço   | URL                          | Descrição                     |
+|-----------|------------------------------|-------------------------------|
+| Frontend  | http://localhost:3000         | Interface web (Vue 3)         |
+| API       | http://localhost:8080         | Backend (.NET 8)              |
+| Swagger   | http://localhost:8080/swagger | Documentação da API           |
+| Health    | http://localhost:8080/health  | Health check da aplicação     |
+| Banco     | localhost:5432               | PostgreSQL 17                 |
 
-- A aplicação deve ser desenvolvida em .NET 8 (C#) no backend e Vue 3 + TypeScript no frontend.
-- O banco de dados deve ser relacional (PostgreSQL).
-- Deve haver documentação da API via Swagger.
-- O sistema deve expor um health check em /health.
-- O código deve conter testes automatizados (unitários e pelo menos um de integração).
-- A solução deve ser conteinerizada com Docker, com docker-compose.yml para orquestrar API, banco e frontend.
-- O repositório deve conter instruções claras no README.md para execução da aplicação.
+### Primeiros passos
 
-- Será considerado ponto extra:
- - Autenticação JWT para endpoints de escrita.
- - Feature flag para troca de provedor de clima.
- - Aplicativo .NET MAUI simples consumindo a API.
- - Pipeline de CI/CD configurado (GitHub Actions).
-  
-Obs.: Não se preocupe com os pontos extras, faça-os se você se sentir confortável e se tiver tempo, consideraremos seu código **desclassificado se seu projeto não estiver funcionando** ou se não tiver os requisitos básicos implementados e funcionais.
+1. Acesse `http://localhost:3000`
+2. Crie uma conta na tela de login
+3. Faça login com as credenciais criadas
+4. Registre a temperatura de uma cidade (ex: Curitiba, Toledo, Cascavel)
+5. Consulte o histórico de temperaturas na aba "Histórico"
 
-## Dicas
+---
 
-- Você pode usar a API do *[OpenWeatherMaps](https://openweathermap.org)* para buscar dados de temperatura;
-- Certifique-se que sua imagem está funcionando perfeitamente com um simples: `docker run -d --name desafio-csharp -port 5000:5000 [seu_docker_hub]/desafio-csharp`, isso te dará pontos extras;
+## Endpoints da API
 
-## Recomendações
+### Autenticação
+| Método | Rota                        | Descrição              | Auth |
+|--------|-----------------------------|------------------------|------|
+| POST   | `/api/usuarios/criar-cadastro` | Criar conta          | Não  |
+| POST   | `/api/usuarios/autenticar`     | Login (retorna JWT)  | Não  |
 
-* Utilize boas práticas de codificação, isso será avaliado;
-* Código limpo, organizado e documentado (quando necessário);
-* Use e abuse de:
-  * SOLID;
-  * Criatividade;
-  * Performance;
-  * Manutenabilidade;
-  * Testes Unitários
-  * ... pois avaliaremos tudo isso!
+### Cidades
+| Método | Rota                    | Descrição              | Auth |
+|--------|-------------------------|------------------------|------|
+| GET    | `/api/cidades`          | Listar todas as cidades | Não  |
+| GET    | `/api/cidades/{id}`     | Buscar cidade por ID    | Não  |
+| POST   | `/api/cidades`          | Cadastrar cidade        | Sim  |
+
+### Histórico de Temperaturas
+| Método | Rota                                          | Descrição                        | Auth |
+|--------|-----------------------------------------------|----------------------------------|------|
+| GET    | `/api/historicostemperaturas`                  | Listar todos os registros        | Não  |
+| GET    | `/api/historicostemperaturas/por-nome/{cidade}` | Histórico por nome (últimos 30d) | Não  |
+| GET    | `/api/historicostemperaturas/por-coordenadas`  | Histórico por coordenadas        | Não  |
+| POST   | `/api/historicostemperaturas/por-nome`         | Registrar temperatura por nome   | Sim  |
+| POST   | `/api/historicostemperaturas/por-coordenadas`  | Registrar por coordenadas        | Sim  |
+| DELETE | `/api/historicostemperaturas/id/{id}`          | Remover registro                 | Sim  |
+
+### Health Check
+| Método | Rota      | Descrição         |
+|--------|-----------|-------------------|
+| GET    | `/health` | Status da aplicação |
+
+---
+
+## Comandos Docker úteis
+
+```bash
+# Subir tudo (API + banco + frontend)
+docker compose up -d --build
+
+# Subir somente o banco (para desenvolvimento local)
+docker compose up -d db
+
+# Ver containers rodando
+docker compose ps
+
+# Ver logs em tempo real
+docker compose logs -f
+
+# Ver logs de um serviço específico
+docker compose logs -f api
+
+# Parar tudo
+docker compose down
+
+# Parar tudo e limpar dados do banco
+docker compose down -v
+```
+
+---
+
+## Executar Testes
+
+```bash
+# Todos os testes
+dotnet test
+
+# Testes unitários
+dotnet test tests/UnitTests
+
+# Testes de integração (requer banco rodando)
+docker compose up -d db
+dotnet test tests/IntegrationTests
+```
+
+---
+
+## Variáveis de Ambiente
+
+| Variável                              | Descrição                    | Valor padrão                  |
+|---------------------------------------|------------------------------|-------------------------------|
+| `ConnectionStrings__DefaultConnection` | Connection string PostgreSQL | Configurado no docker-compose |
+| `OpenWeatherMap__ApiKey`              | Chave da API OpenWeatherMap  | Configurado no docker-compose |
+| `Jwt__SecretKey`                      | Chave secreta do JWT         | Configurado no docker-compose |
+| `Jwt__Issuer`                         | Emissor do token             | ConsultWeather                |
+| `Jwt__Audience`                       | Audiência do token           | ConsultWeather                |
+| `Jwt__ExpirationInMinutes`            | Tempo de expiração do token  | 60                            |
